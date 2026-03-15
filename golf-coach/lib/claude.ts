@@ -6,16 +6,19 @@ const client = new Anthropic({
 });
 
 export async function parseScreenshots(
-  imageBase64Array: string[]
+  imageBase64Array: string[],
+  mimeTypes: string[] = []
 ): Promise<ParsedRoundData> {
-  const imageContent = imageBase64Array.map((base64) => ({
-    type: "image" as const,
-    source: {
-      type: "base64" as const,
-      media_type: "image/jpeg" as const,
-      data: base64,
-    },
-  }));
+  const imageContent = imageBase64Array.map((base64, i) => {
+    const raw = mimeTypes[i] || "image/jpeg";
+    const media_type = (["image/jpeg", "image/png", "image/gif", "image/webp"].includes(raw)
+      ? raw
+      : "image/jpeg") as "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+    return {
+      type: "image" as const,
+      source: { type: "base64" as const, media_type, data: base64 },
+    };
+  });
 
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",

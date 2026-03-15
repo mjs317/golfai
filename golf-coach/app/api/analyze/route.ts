@@ -13,13 +13,15 @@ export async function POST(request: NextRequest) {
     }
 
     const imageBase64Array: string[] = [];
+    const mimeTypes: string[] = [];
     for (const file of files) {
       const arrayBuffer = await file.arrayBuffer();
       const base64 = Buffer.from(arrayBuffer).toString("base64");
       imageBase64Array.push(base64);
+      mimeTypes.push(file.type || "image/jpeg");
     }
 
-    const parsedRound = await parseScreenshots(imageBase64Array);
+    const parsedRound = await parseScreenshots(imageBase64Array, mimeTypes);
     if (manualNotes) parsedRound.notes = manualNotes;
 
     const { data: recentRounds } = await supabase
