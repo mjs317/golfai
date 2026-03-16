@@ -79,9 +79,9 @@ export default function UploadPage() {
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
       <div className="text-5xl mb-5">⛳</div>
       <Loader2 size={36} className="animate-spin text-green-600 mb-4" />
-      <h2 className="text-xl font-bold text-gray-900 mb-2">Analyzing Your Round</h2>
-      <p className="text-gray-500 text-sm max-w-xs">{processingStatus}</p>
-      <p className="text-gray-400 text-xs mt-3">This takes about 15-20 seconds...</p>
+      <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">Analyzing Your Round</h2>
+      <p className="text-gray-500 dark:text-gray-400 text-sm max-w-xs">{processingStatus}</p>
+      <p className="text-gray-400 dark:text-gray-500 text-xs mt-3">This takes about 15-20 seconds...</p>
     </div>
   );
 
@@ -92,8 +92,8 @@ export default function UploadPage() {
       <div className="space-y-5 max-w-2xl mx-auto">
         <div className="card bg-green-50 border-green-200 text-center">
           <CheckCircle className="text-green-600 mx-auto mb-2" size={32} />
-          <h2 className="text-xl font-bold text-gray-900">Round Saved!</h2>
-          <p className="text-gray-600 text-sm mt-1">{parsedData.course_name} • {new Date(parsedData.date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</p>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Round Saved!</h2>
+          <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">{parsedData.course_name} • {(() => { const [y,m,d] = parsedData.date.split("-").map(Number); return new Date(y, m-1, d).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }); })()}</p>
           <div className="mt-3 flex justify-center gap-6">
             <div><div className="text-3xl font-bold text-gray-900">{parsedData.gross_score}</div><div className="text-xs text-gray-500">Gross</div></div>
             <div>
@@ -175,8 +175,8 @@ export default function UploadPage() {
   return (
     <div className="max-w-xl mx-auto space-y-5">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Upload Round</h1>
-        <p className="text-sm text-gray-500 mt-1">Upload screenshots from your 18 Birdies app. Claude reads them automatically — no manual entry!</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Upload Round</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Upload screenshots from your 18 Birdies app. Claude reads them automatically — no manual entry!</p>
       </div>
 
       {error && (
@@ -202,17 +202,17 @@ export default function UploadPage() {
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
         className={clsx("border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors",
-          dragOver ? "border-green-500 bg-green-50" : "border-gray-200 hover:border-green-400 hover:bg-green-50"
+          dragOver ? "border-green-500 bg-green-50 dark:bg-green-900/20" : "border-gray-200 dark:border-gray-700 hover:border-green-400 hover:bg-green-50 dark:hover:bg-green-900/20"
         )}>
         <ImagePlus size={36} className={clsx("mx-auto mb-3", dragOver ? "text-green-500" : "text-gray-300")} />
-        <p className="font-medium text-gray-700">{dragOver ? "Drop screenshots here" : "Tap to upload screenshots"}</p>
-        <p className="text-xs text-gray-400 mt-1">PNG, JPG, HEIC • Up to 6 images</p>
+        <p className="font-medium text-gray-700 dark:text-gray-300">{dragOver ? "Drop screenshots here" : "Tap to upload screenshots"}</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">PNG, JPG, HEIC • Up to 6 images</p>
         <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={e => handleFiles(e.target.files)} />
       </div>
 
       {files.length > 0 && (
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">{files.length} screenshot{files.length !== 1 ? "s" : ""} ready</p>
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{files.length} screenshot{files.length !== 1 ? "s" : ""} ready</p>
           <div className="grid grid-cols-3 gap-2">
             {files.map((file, i) => (
               <div key={i} className="relative group">
@@ -229,8 +229,8 @@ export default function UploadPage() {
       )}
 
       <div>
-        <label className="text-sm font-medium text-gray-700 block mb-1.5">Round Notes (optional)</label>
-        <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="e.g. Struggled off the tee today, hit some good wedges near the end." className="w-full border border-gray-200 rounded-xl p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 placeholder-gray-400" rows={3} />
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1.5">Round Notes (optional)</label>
+        <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="e.g. Struggled off the tee today, hit some good wedges near the end." className="w-full border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-gray-100 placeholder-gray-400 bg-white dark:bg-gray-800" rows={3} />
       </div>
 
       <button onClick={handleSubmit} disabled={files.length === 0} className="btn-primary w-full flex items-center justify-center gap-2">

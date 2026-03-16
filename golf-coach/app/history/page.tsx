@@ -30,8 +30,8 @@ export default function HistoryPage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Round History</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{rounds.length} total rounds tracked</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Round History</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{rounds.length} total rounds tracked</p>
         </div>
         <Link href="/upload"><button className="btn-primary text-sm flex items-center gap-1.5"><Upload size={15} />New</button></Link>
       </div>
@@ -39,7 +39,7 @@ export default function HistoryPage() {
       {rounds.length > 0 && (
         <div className="flex gap-2">
           {(["all", "9", "18"] as const).map(f => (
-            <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${filter === f ? "bg-green-600 text-white" : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"}`}>
+            <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${filter === f ? "bg-green-600 text-white" : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"}`}>
               {f === "all" ? "All Rounds" : `${f} Holes`}
             </button>
           ))}
@@ -49,7 +49,7 @@ export default function HistoryPage() {
       {filtered.length === 0 ? (
         <div className="text-center py-16">
           <div className="text-4xl mb-3">📋</div>
-          <p className="text-gray-500">{rounds.length === 0 ? "No rounds yet. Upload your first round!" : `No ${filter}-hole rounds found.`}</p>
+          <p className="text-gray-500 dark:text-gray-400">{rounds.length === 0 ? "No rounds yet. Upload your first round!" : `No ${filter}-hole rounds found.`}</p>
           {rounds.length === 0 && <Link href="/upload" className="mt-4 inline-block"><button className="btn-primary">Upload First Round</button></Link>}
         </div>
       ) : (

@@ -24,13 +24,13 @@ export default function CoachPage() {
   if (rounds.length === 0) return (
     <div className="text-center py-16">
       <div className="text-4xl mb-3">🏌️</div>
-      <h2 className="text-xl font-bold text-gray-900 mb-2">No Data Yet</h2>
-      <p className="text-gray-500 text-sm mb-5">Upload a few rounds and your AI coach will build a personalized improvement plan.</p>
+      <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">No Data Yet</h2>
+      <p className="text-gray-500 dark:text-gray-400 text-sm mb-5">Upload a few rounds and your AI coach will build a personalized improvement plan.</p>
       <Link href="/upload"><button className="btn-primary">Upload First Round</button></Link>
     </div>
   );
 
-  const avg = (arr: number[]) => arr.length > 0 ? Math.round((arr.reduce((a,b) => a+b, 0) / arr.length) * 10) / 10 : 0;
+  const avg = (arr: number[]) => arr.length > 0 ? Math.round((arr.reduce((a, b) => a + b, 0) / arr.length) * 10) / 10 : 0;
 
   const avgFw = avg(rounds.filter(r => r.fairways_attempted > 0).map(r => (r.fairways_hit / r.fairways_attempted) * 100));
   const avgGir = avg(rounds.filter(r => r.gir_attempted > 0).map(r => (r.gir / r.gir_attempted) * 100));
@@ -52,12 +52,12 @@ export default function CoachPage() {
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Your AI Coach</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Based on {rounds.length} round{rounds.length !== 1 ? "s" : ""} • Goal: 14 → Single Digits</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Your AI Coach</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Based on {rounds.length} round{rounds.length !== 1 ? "s" : ""} • Goal: 14 → Single Digits</p>
       </div>
 
-      <div className="card bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-        <h2 className="font-bold text-green-900 mb-3">📊 Season Progress Snapshot</h2>
+      <div className="card bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-700">
+        <h2 className="font-bold text-green-900 dark:text-green-300 mb-3">📊 Season Progress Snapshot</h2>
         <div className="grid grid-cols-2 gap-3">
           {[
             { label: "Avg Fairway %", value: `${Math.round(avgFw)}%`, ok: avgFw >= 50 },
@@ -65,8 +65,8 @@ export default function CoachPage() {
             { label: "Avg Putts/Hole", value: avgPuttsPerHole, ok: avgPuttsPerHole <= 2.0 },
             { label: "Avg Chips/Hole", value: avgChipsPerHole, ok: avgChipsPerHole <= 0.5 },
           ].map((s, i) => (
-            <div key={i} className="bg-white rounded-lg p-3 flex items-center justify-between">
-              <div><div className="text-xs text-gray-500">{s.label}</div><div className="font-bold text-gray-900">{s.value}</div></div>
+            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center justify-between">
+              <div><div className="text-xs text-gray-500 dark:text-gray-400">{s.label}</div><div className="font-bold text-gray-900 dark:text-gray-100">{s.value}</div></div>
               <span className={s.ok ? "text-green-500 text-lg" : "text-orange-400 text-lg"}>{s.ok ? "✓" : "⚠"}</span>
             </div>
           ))}
@@ -75,16 +75,16 @@ export default function CoachPage() {
 
       {weaknesses.length > 0 && (
         <div className="card">
-          <h2 className="font-bold text-gray-900 mb-4">🎯 Areas to Focus On</h2>
+          <h2 className="font-bold text-gray-900 dark:text-gray-100 mb-4">🎯 Areas to Focus On</h2>
           <div className="space-y-3">
             {weaknesses.map((w, i) => (
-              <div key={i} className={`p-4 rounded-xl border ${w.priority === "high" ? "bg-red-50 border-red-200" : "bg-yellow-50 border-yellow-200"}`}>
+              <div key={i} className={`p-4 rounded-xl border ${w.priority === "high" ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800" : "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800"}`}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="font-semibold text-sm text-gray-900">{w.area}</span>
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${w.priority === "high" ? "bg-red-200 text-red-700" : "bg-yellow-200 text-yellow-700"}`}>{w.priority === "high" ? "High Priority" : "Medium Priority"}</span>
+                  <span className="font-semibold text-sm text-gray-900 dark:text-gray-100">{w.area}</span>
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${w.priority === "high" ? "bg-red-200 dark:bg-red-800 text-red-700 dark:text-red-300" : "bg-yellow-200 dark:bg-yellow-800 text-yellow-700 dark:text-yellow-300"}`}>{w.priority === "high" ? "High Priority" : "Medium Priority"}</span>
                 </div>
-                <div className="text-xs text-gray-500 mb-1">Current: <strong>{w.current}</strong> → Target: {w.target}</div>
-                <p className="text-sm text-gray-700">{w.tip}</p>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Current: <strong>{w.current}</strong> → Target: {w.target}</div>
+                <p className="text-sm text-gray-700 dark:text-gray-300">{w.tip}</p>
               </div>
             ))}
           </div>
@@ -92,21 +92,21 @@ export default function CoachPage() {
       )}
 
       <div className="card">
-        <h2 className="font-bold text-gray-900 mb-2">📅 Weekly Practice Blueprint</h2>
-        <p className="text-xs text-gray-500 mb-4">Tailored for: 1 range session/week + 9 holes/week</p>
+        <h2 className="font-bold text-gray-900 dark:text-gray-100 mb-2">📅 Weekly Practice Blueprint</h2>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Tailored for: 1 range session/week + 9 holes/week</p>
         <div className="space-y-3">
-          <div className="bg-green-50 border border-green-100 rounded-xl p-4">
-            <div className="font-semibold text-green-900 text-sm mb-1">🏌️ Range Session (~60 min)</div>
-            <ul className="text-sm text-gray-700 space-y-1.5">
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-xl p-4">
+            <div className="font-semibold text-green-900 dark:text-green-300 text-sm mb-1">🏌️ Range Session (~60 min)</div>
+            <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1.5">
               {avgFw < 50 && <li>• <strong>20 min:</strong> Tee shots — alignment sticks, tempo focus</li>}
               {avgGir < 35 && <li>• <strong>20 min:</strong> Mid-iron approaches — targets at 100, 125, 150 yds</li>}
               {avgChipsPerHole > 0.5 && <li>• <strong>10 min:</strong> Chipping — land-zone targeting drill</li>}
               <li>• <strong>10 min:</strong> Putting — 3-6 foot gate drill on practice green</li>
             </ul>
           </div>
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-            <div className="font-semibold text-blue-900 text-sm mb-1">⛳ On-Course (9 holes)</div>
-            <ul className="text-sm text-gray-700 space-y-1.5">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl p-4">
+            <div className="font-semibold text-blue-900 dark:text-blue-300 text-sm mb-1">⛳ On-Course (9 holes)</div>
+            <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1.5">
               {avgFw < 50 && <li>• Pick a landing zone before every tee shot</li>}
               {avgGir < 35 && <li>• Aim for center of green on all approach shots</li>}
               {avgPuttsPerHole > 2.0 && <li>• Focus on lag putting — no 3-putts goal</li>}
@@ -119,25 +119,25 @@ export default function CoachPage() {
 
       {allDrills.length > 0 && (
         <div className="card">
-          <h2 className="font-bold text-gray-900 mb-4">🔧 Your Drill Library</h2>
-          <p className="text-xs text-gray-500 mb-3">Drills recommended from your recent rounds</p>
+          <h2 className="font-bold text-gray-900 dark:text-gray-100 mb-4">🔧 Your Drill Library</h2>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Drills recommended from your recent rounds</p>
           <div className="space-y-3">
             {allDrills.map((drill, i) => (
-              <div key={i} className="border border-gray-200 rounded-lg p-4">
+              <div key={i} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="font-semibold text-sm">{drill.title}</span>
-                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">{drill.focus_area}</span>
+                  <span className="font-semibold text-sm text-gray-900 dark:text-gray-100">{drill.title}</span>
+                  <span className="text-xs bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">{drill.focus_area}</span>
                 </div>
-                <p className="text-xs text-gray-400 mb-2">⏱ {drill.duration}</p>
-                <p className="text-sm text-gray-700 leading-relaxed">{drill.description}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">⏱ {drill.duration}</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{drill.description}</p>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      <div className="card bg-gray-50">
-        <h2 className="font-bold text-gray-900 mb-3">🏆 Milestones to Single Digits</h2>
+      <div className="card bg-gray-50 dark:bg-gray-800/50">
+        <h2 className="font-bold text-gray-900 dark:text-gray-100 mb-3">🏆 Milestones to Single Digits</h2>
         <div className="space-y-2">
           {[
             { label: "Shoot +7 or better for 9 holes", done: rounds.some(r => r.holes_played === 9 && (r.gross_score - r.par) <= 7) },
@@ -148,8 +148,8 @@ export default function CoachPage() {
             { label: "5+ pars or better in 9 holes", done: rounds.some(r => r.holes_played === 9 && r.pars_or_better >= 5) },
           ].map((m, i) => (
             <div key={i} className="flex items-center gap-3">
-              <span className={`text-lg ${m.done ? "text-green-500" : "text-gray-300"}`}>{m.done ? "✅" : "⭕"}</span>
-              <span className={`text-sm ${m.done ? "text-green-700 font-medium" : "text-gray-600"}`}>{m.label}</span>
+              <span className={`text-lg ${m.done ? "text-green-500" : "text-gray-300 dark:text-gray-600"}`}>{m.done ? "✅" : "⭕"}</span>
+              <span className={`text-sm ${m.done ? "text-green-700 dark:text-green-400 font-medium" : "text-gray-600 dark:text-gray-400"}`}>{m.label}</span>
             </div>
           ))}
         </div>

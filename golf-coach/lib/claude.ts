@@ -1,6 +1,28 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { CoachingAnalysis, HoleData, ParsedRoundData, RoundStats } from "./types";
 
+export interface RangePlanItem {
+  id: string;
+  text: string;
+  note?: string;
+}
+
+export interface RangePlanSection {
+  id: string;
+  title: string;
+  duration: string;
+  emoji: string;
+  color: "gray" | "blue" | "green" | "orange" | "purple";
+  items: RangePlanItem[];
+}
+
+export interface RangePlan {
+  session_title: string;
+  total_time: string;
+  focus_summary: string;
+  sections: RangePlanSection[];
+}
+
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
@@ -187,4 +209,98 @@ Provide 3-4 drills for the weakest areas. All drills must be doable at a driving
 
   const analysis = JSON.parse(jsonMatch[0]);
   return { ...analysis, score_to_par: scoreToPar };
+}
+
+export async function generateRangePlan(
+  sessionMinutes: number,
+  recentRounds: Array<{
+    date: string; gross_score: number; par: number;
+    fairways_hit: number; fairways_attempted: number;
+    gir: number; gir_attempted: number; total_putts: number;
+    chip_shots: number; holes_played: number; penalties: number;
+    ai_drills?: Array<{ title: string; description: string; focus_area: string; duration: string }>;
+  }>
+): Promise<RangePlan> {
+  const avgFw = recentRounds.length > 0
+    ? Math.round(recentRounds.filter(r => r.fairways_attempted > 0).reduce((s, r) => s + (r.fairways_hit / r.fairways_attempted) * 100, 0) / Math.max(1, recentRounds.filter(r => r.fairways_attempted > 0).length))
+    : 50;
+  const avgGir = recentRounds.length > 0
+    ? Math.round(recentRounds.filter(r => r.gir_attempted > 0).reduce((s, r) => s + (r.gir / r.gir_attempted) * 100, 0) / Math.max(1, recentRounds.filter(r => r.gir_attempted > 0).length))
+    : 35;
+  const avgPutts = recentRounds.length > 0
+    ? Math.round((recentRounds.reduce((s, r) => s + r.total_putts / r.holes_played, 0) / recentRounds.length) * 10) / 10
+    : 2.0;
+  const avgChips = recentRounds.length > 0
+    ? Math.round((recentRounds.reduce((s, r) => s + r.chip_shots / r.holes_played, 0) / recentRounds.length) * 10) / 10
+    : 0.5;
+  const avgPenalties = recentRounds.length > 0
+    ? Math.round((recentRounds.reduce((s, r) => s + r.penalties, 0) / recentRounds.length) * 10) / 10
+    : 1.0;
+
+  const recentDrills = Array.from(
+    new Map(recentRounds.flatMap(r => r.ai_drills || []).map(d => [d.title, d])).values()
+  ).slice(0, 5);
+
+  const response = await client.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 3000,
+    messages: [{
+      role: "user",
+      content: `You are an expert PGA-level golf coach creating a ${sessionMinutes}-minute driving range practice session for Michael, a 14-handicap golfer aiming for single digits. He has access to a driving range with all clubs and a practice putting green.
+
+CURRENT STATS (last ${recentRounds.length} rounds):
+- Fairway %: ${avgFw}% (target: 50%+)
+- GIR %: ${avgGir}% (target: 35%+)
+- Putts/hole: ${avgPutts} (target: <2.0)
+- Chips/hole: ${avgChips} (target: <0.5)
+- Penalties/round: ${avgPenalties} (target: <1)
+
+${recentDrills.length > 0 ? `PREVIOUSLY RECOMMENDED DRILLS TO REFERENCE:
+${recentDrills.map(d => `- ${d.title}: ${d.description}`).join("\n")}` : ""}
+
+Create a complete ${sessionMinutes}-minute range session. Prioritize the weakest areas. Return ONLY valid JSON with this exact structure:
+{
+  "session_title": "descriptive title for this session (e.g. 'Accuracy & Iron Control Session')",
+  "total_time": "${sessionMinutes} minutes",
+  "focus_summary": "2-3 sentences explaining what this session targets and why, based on recent stats",
+  "sections": [
+    {
+      "id": "warmup",
+      "title": "Warm-Up",
+      "duration": "X min",
+      "emoji": "🔥",
+      "color": "gray",
+      "items": [
+        { "id": "wu1", "text": "Specific activity with ball count or rep count", "note": "Key coaching cue or tip" }
+      ]
+    },
+    {
+      "id": "main1",
+      "title": "Section Title (e.g. Driving Accuracy)",
+      "duration": "X min",
+      "emoji": "🏌️",
+      "color": "blue",
+      "items": [
+        { "id": "m1a", "text": "Drill name with specific reps/balls", "note": "How to do it correctly" }
+      ]
+    }
+  ]
+}
+
+Rules:
+- Warm-up should be 5-10 min (proportional to session length)
+- 2-4 main sections based on top weaknesses
+- End with a putting/short game section if time allows
+- Each section has 2-4 specific items with actionable text
+- Colors: gray=warmup, blue=driving/woods, green=irons/approaches, orange=short game/chipping, purple=putting
+- All items must be doable at a standard driving range or putting green
+- Be very specific (e.g. "20 balls with 7-iron, aim at 150yd flag" not "practice irons")
+- Time allocations must add up to exactly ${sessionMinutes} minutes`,
+    }],
+  });
+
+  const text = response.content[0].type === "text" ? response.content[0].text : "";
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error("Could not generate range plan");
+  return JSON.parse(jsonMatch[0]);
 }
