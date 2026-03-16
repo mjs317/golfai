@@ -211,6 +211,15 @@ Provide 3-4 drills for the weakest areas. All drills must be doable at a driving
   return { ...analysis, score_to_par: scoreToPar };
 }
 
+export interface RecentRangeSession {
+  session_title: string;
+  total_time: string;
+  focus_summary: string;
+  session_notes?: string | null;
+  completed_at: string;
+  sections: RangePlanSection[];
+}
+
 export async function generateRangePlan(
   sessionMinutes: number,
   recentRounds: Array<{
@@ -219,7 +228,8 @@ export async function generateRangePlan(
     gir: number; gir_attempted: number; total_putts: number;
     chip_shots: number; holes_played: number; penalties: number;
     ai_drills?: Array<{ title: string; description: string; focus_area: string; duration: string }>;
-  }>
+  }>,
+  recentRangeSessions: RecentRangeSession[] = []
 ): Promise<RangePlan> {
   const avgFw = recentRounds.length > 0
     ? Math.round(recentRounds.filter(r => r.fairways_attempted > 0).reduce((s, r) => s + (r.fairways_hit / r.fairways_attempted) * 100, 0) / Math.max(1, recentRounds.filter(r => r.fairways_attempted > 0).length))
@@ -255,10 +265,19 @@ CURRENT STATS (last ${recentRounds.length} rounds):
 - Chips/hole: ${avgChips} (target: <0.5)
 - Penalties/round: ${avgPenalties} (target: <1)
 
-${recentDrills.length > 0 ? `PREVIOUSLY RECOMMENDED DRILLS TO REFERENCE:
+${recentRangeSessions.length > 0 ? `RECENT RANGE SESSIONS (most recent first — avoid repeating the same drills, build on what was practiced):
+${recentRangeSessions.slice(0, 3).map((s, i) => {
+  const date = new Date(s.completed_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const drillNames = s.sections.flatMap(sec => sec.items.map(item => item.text)).slice(0, 6).join(", ");
+  return `Session ${i + 1} (${date}, ${s.total_time}): "${s.session_title}"
+  Focus: ${s.focus_summary}
+  Drills practiced: ${drillNames}${s.session_notes ? `\n  Michael's notes: "${s.session_notes}"` : ""}`;
+}).join("\n\n")}` : "No previous range sessions yet — this is the first one."}
+
+${recentDrills.length > 0 ? `PREVIOUSLY RECOMMENDED DRILLS (from round analysis):
 ${recentDrills.map(d => `- ${d.title}: ${d.description}`).join("\n")}` : ""}
 
-Create a complete ${sessionMinutes}-minute range session. Prioritize the weakest areas. Return ONLY valid JSON with this exact structure:
+Create a complete ${sessionMinutes}-minute range session. Build on previous sessions — introduce new variations if a drill was already done recently, and directly address any weaknesses Michael noted in his session notes. Prioritize the weakest areas. Return ONLY valid JSON with this exact structure:
 {
   "session_title": "descriptive title for this session (e.g. 'Accuracy & Iron Control Session')",
   "total_time": "${sessionMinutes} minutes",

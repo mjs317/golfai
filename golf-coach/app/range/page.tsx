@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, CheckCircle2, Circle, RefreshCw, Dumbbell, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, CheckCircle2, Circle, RefreshCw, Dumbbell, ChevronDown, ChevronUp, Save, Check } from "lucide-react";
 import clsx from "clsx";
 import { RangePlan, RangePlanSection } from "@/lib/claude";
 
@@ -98,6 +98,11 @@ export default function RangePage() {
   const [error, setError] = useState<string | null>(null);
   const [checked, setChecked] = useState<Set<string>>(new Set());
 
+  // Session notes + save state
+  const [sessionNotes, setSessionNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
   // Persist checked state in localStorage per plan
   const planKey = plan ? `range-checked-${plan.session_title.slice(0, 20)}` : null;
 
@@ -121,6 +126,8 @@ export default function RangePage() {
     setLoading(true);
     setError(null);
     setChecked(new Set());
+    setSessionNotes("");
+    setSaved(false);
     try {
       const res = await fetch("/api/range", {
         method: "POST",
@@ -140,10 +147,37 @@ export default function RangePage() {
     }
   };
 
+  const saveSession = async () => {
+    if (!plan || saving) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/range/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_title: plan.session_title,
+          total_time: plan.total_time,
+          focus_summary: plan.focus_summary,
+          sections: plan.sections,
+          session_notes: sessionNotes.trim() || null,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to save");
+      setSaved(true);
+      // Clear localStorage checklist since it's now saved
+      if (planKey) localStorage.removeItem(planKey);
+    } catch {
+      // Silently handle — don't break the flow
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const allItems = plan?.sections.flatMap(s => s.items) ?? [];
   const totalDone = allItems.filter(i => checked.has(i.id)).length;
   const totalItems = allItems.length;
   const pct = totalItems > 0 ? Math.round((totalDone / totalItems) * 100) : 0;
+  const isComplete = pct === 100 && totalItems > 0;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -152,7 +186,7 @@ export default function RangePage() {
           <Dumbbell size={24} className="text-green-600" /> Range Practice
         </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-          Generate an AI-powered practice session based on your recent rounds
+          AI-powered sessions that learn from your rounds and evolve as you improve
         </p>
       </div>
 
@@ -181,7 +215,10 @@ export default function RangePage() {
           disabled={loading}
           className="btn-primary w-full flex items-center justify-center gap-2"
         >
-          {loading ? <><Loader2 size={18} className="animate-spin" />Generating your session...</> : <><Dumbbell size={18} />{plan ? "Generate New Session" : "Generate Practice Session"}</>}
+          {loading
+            ? <><Loader2 size={18} className="animate-spin" />Generating your session...</>
+            : <><Dumbbell size={18} />{plan ? "Generate New Session" : "Generate Practice Session"}</>
+          }
         </button>
 
         {error && (
@@ -199,9 +236,11 @@ export default function RangePage() {
                 <h2 className="font-bold text-gray-900 dark:text-gray-100">{plan.session_title}</h2>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">⏱ {plan.total_time}</p>
               </div>
-              <button onClick={generate} disabled={loading} className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-green-600 dark:hover:text-green-400 transition-colors">
-                <RefreshCw size={13} />New
-              </button>
+              {!saved && (
+                <button onClick={generate} disabled={loading} className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-green-600 dark:hover:text-green-400 transition-colors">
+                  <RefreshCw size={13} />New
+                </button>
+              )}
             </div>
             <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-4">{plan.focus_summary}</p>
 
@@ -217,11 +256,6 @@ export default function RangePage() {
                     style={{ width: `${pct}%` }}
                   />
                 </div>
-                {pct === 100 && (
-                  <p className="text-center text-sm text-green-600 dark:text-green-400 font-semibold mt-2">
-                    🎉 Session complete! Great work!
-                  </p>
-                )}
               </div>
             )}
           </div>
@@ -237,11 +271,67 @@ export default function RangePage() {
             ))}
           </div>
 
-          <div className="card bg-gray-50 dark:bg-gray-800/50 text-center">
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Tap any item to check it off as you complete it. Progress is saved automatically.
-            </p>
-          </div>
+          {/* Notes + Save — appears when session is 100% complete */}
+          {isComplete && (
+            <div className={clsx(
+              "card border-2 transition-all",
+              saved
+                ? "border-green-400 dark:border-green-600 bg-green-50 dark:bg-green-900/20"
+                : "border-green-200 dark:border-green-700"
+            )}>
+              {saved ? (
+                <div className="text-center py-2">
+                  <div className="flex items-center justify-center gap-2 text-green-600 dark:text-green-400 font-semibold mb-1">
+                    <Check size={20} />Session saved to your log!
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Your notes and this session will inform your next AI-generated plan.
+                  </p>
+                  <button
+                    onClick={generate}
+                    className="mt-3 btn-primary text-sm flex items-center gap-2 mx-auto"
+                  >
+                    <Dumbbell size={16} />Generate Next Session
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xl">🎉</span>
+                    <h3 className="font-bold text-gray-900 dark:text-gray-100">Session Complete!</h3>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                    Add notes about what felt good, what needs more work, or anything you want Claude to remember for next time.
+                  </p>
+                  <textarea
+                    value={sessionNotes}
+                    onChange={e => setSessionNotes(e.target.value)}
+                    placeholder="e.g. Alignment stick drill really clicked today. Still struggling with lag putting. Driver felt much better with the tempo cue."
+                    className="w-full border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-gray-100 placeholder-gray-400 bg-white dark:bg-gray-800 mb-3"
+                    rows={3}
+                  />
+                  <button
+                    onClick={saveSession}
+                    disabled={saving}
+                    className="btn-primary w-full flex items-center justify-center gap-2"
+                  >
+                    {saving
+                      ? <><Loader2 size={16} className="animate-spin" />Saving...</>
+                      : <><Save size={16} />Save Session & Notes</>
+                    }
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
+          {!isComplete && (
+            <div className="card bg-gray-50 dark:bg-gray-800/50 text-center">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Tap any item to check it off as you complete it. Notes and save unlock when you finish the session.
+              </p>
+            </div>
+          )}
         </>
       )}
 
@@ -249,6 +339,7 @@ export default function RangePage() {
         <div className="text-center py-8 text-gray-400 dark:text-gray-500">
           <Dumbbell size={40} className="mx-auto mb-3 opacity-30" />
           <p className="text-sm">Select a session length and generate your personalized range plan</p>
+          <p className="text-xs mt-1 opacity-70">Claude uses your recent rounds and past sessions to build a targeted plan</p>
         </div>
       )}
     </div>

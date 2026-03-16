@@ -1,0 +1,35 @@
+import { NextRequest, NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
+
+export async function GET() {
+  try {
+    const { data, error } = await supabase
+      .from("range_sessions")
+      .select("id, session_title, total_time, focus_summary, sections, session_notes, completed_at")
+      .order("completed_at", { ascending: false })
+      .limit(10);
+
+    if (error) throw error;
+    return NextResponse.json({ sessions: data || [] });
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Failed to fetch sessions" }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { session_title, total_time, focus_summary, sections, session_notes } = body;
+
+    const { data, error } = await supabase
+      .from("range_sessions")
+      .insert({ session_title, total_time, focus_summary, sections, session_notes })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return NextResponse.json({ session: data });
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Failed to save session" }, { status: 500 });
+  }
+}
