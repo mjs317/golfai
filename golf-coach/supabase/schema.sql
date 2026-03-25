@@ -27,3 +27,7 @@ CREATE TABLE IF NOT EXISTS rounds (
 );
 
 CREATE INDEX IF NOT EXISTS rounds_date_idx ON rounds(date DESC);
+
+-- Enable RLS: blocks all direct PostgREST access (anon/authenticated roles).
+-- Server-side code uses the service role key which bypasses RLS automatically.
+ALTER TABLE rounds ENABLE ROW LEVEL SECURITY;
