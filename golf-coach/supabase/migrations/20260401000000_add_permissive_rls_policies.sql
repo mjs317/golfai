@@ -15,19 +15,10 @@
 -- Run in: Supabase Dashboard > SQL Editor
 -- ============================================================
 
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'rounds' AND policyname = 'allow_all_rounds'
-  ) THEN
-    CREATE POLICY "allow_all_rounds"
-      ON public.rounds FOR ALL USING (true) WITH CHECK (true);
-  END IF;
+-- Allow full access on rounds (single-user app, no per-user isolation needed).
+CREATE POLICY "allow_all_rounds"
+  ON public.rounds FOR ALL USING (true) WITH CHECK (true);
 
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'range_sessions' AND policyname = 'allow_all_range_sessions'
-  ) THEN
-    CREATE POLICY "allow_all_range_sessions"
-      ON public.range_sessions FOR ALL USING (true) WITH CHECK (true);
-  END IF;
-END $$;
+-- range_sessions: run after creating the table (see range_sessions.sql).
+-- CREATE POLICY "allow_all_range_sessions"
+--   ON public.range_sessions FOR ALL USING (true) WITH CHECK (true);
