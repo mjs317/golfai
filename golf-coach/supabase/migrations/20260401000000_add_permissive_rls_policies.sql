@@ -15,14 +15,19 @@
 -- Run in: Supabase Dashboard > SQL Editor
 -- ============================================================
 
-CREATE POLICY IF NOT EXISTS "allow_all_rounds"
-  ON public.rounds
-  FOR ALL
-  USING (true)
-  WITH CHECK (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'rounds' AND policyname = 'allow_all_rounds'
+  ) THEN
+    CREATE POLICY "allow_all_rounds"
+      ON public.rounds FOR ALL USING (true) WITH CHECK (true);
+  END IF;
 
-CREATE POLICY IF NOT EXISTS "allow_all_range_sessions"
-  ON public.range_sessions
-  FOR ALL
-  USING (true)
-  WITH CHECK (true);
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'range_sessions' AND policyname = 'allow_all_range_sessions'
+  ) THEN
+    CREATE POLICY "allow_all_range_sessions"
+      ON public.range_sessions FOR ALL USING (true) WITH CHECK (true);
+  END IF;
+END $$;
