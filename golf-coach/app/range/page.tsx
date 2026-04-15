@@ -164,7 +164,7 @@ export default function RangePage() {
     if (!validValues.includes(sessionMinutes)) {
       setSessionMinutes(sessionType === 'practice' ? 60 : 20);
     }
-  }, [sessionType]);
+  }, [sessionType, sessionMinutes]);
 
   const handleTabChange = (tab: ActiveTab) => {
     setActiveTab(tab);
@@ -579,7 +579,7 @@ export default function RangePage() {
                       <p className="font-semibold text-sm text-gray-900 dark:text-gray-100">{session.session_title}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{session.focus_summary}</p>
                       {session.session_notes && (
-                        <p className="text-xs text-gray-400 dark:text-gray-500 italic mt-1 line-clamp-2">"{session.session_notes}"</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 italic mt-1 line-clamp-2">&ldquo;{session.session_notes}&rdquo;</p>
                       )}
                     </div>
                     <div className="flex-shrink-0">
