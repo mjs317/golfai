@@ -4,8 +4,13 @@ import { supabase } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
-    const { sessionMinutes } = await request.json();
+    const { sessionMinutes, sessionType, facilityOptions } = await request.json();
     const minutes = Number(sessionMinutes) || 60;
+    const type: 'practice' | 'warmup' = sessionType === 'warmup' ? 'warmup' : 'practice';
+    const facility = {
+      chippingGreen: facilityOptions?.chippingGreen ?? true,
+      puttingGreen: facilityOptions?.puttingGreen ?? true,
+    };
 
     const [roundsResult, sessionsResult] = await Promise.all([
       supabase
@@ -15,7 +20,7 @@ export async function POST(request: NextRequest) {
         .limit(10),
       supabase
         .from("range_sessions")
-        .select("session_title, total_time, focus_summary, sections, session_notes, completed_at")
+        .select("session_title, total_time, focus_summary, sections, session_notes, completed_at, session_type")
         .order("completed_at", { ascending: false })
         .limit(3),
     ]);
@@ -24,6 +29,8 @@ export async function POST(request: NextRequest) {
 
     const plan = await generateRangePlan(
       minutes,
+      type,
+      facility,
       roundsResult.data || [],
       sessionsResult.data || []
     );

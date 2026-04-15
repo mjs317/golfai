@@ -5,9 +5,9 @@ export async function GET() {
   try {
     const { data, error } = await supabase
       .from("range_sessions")
-      .select("id, session_title, total_time, focus_summary, sections, session_notes, completed_at")
+      .select("id, session_title, total_time, focus_summary, sections, session_notes, completed_at, session_type")
       .order("completed_at", { ascending: false })
-      .limit(10);
+      .limit(50);
 
     if (error) throw error;
     return NextResponse.json({ sessions: data || [] });
@@ -19,11 +19,12 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { session_title, total_time, focus_summary, sections, session_notes } = body;
+    const { session_title, total_time, focus_summary, sections, session_notes, session_type } = body;
+    const type = session_type === 'warmup' ? 'warmup' : 'practice';
 
     const { data, error } = await supabase
       .from("range_sessions")
-      .insert({ session_title, total_time, focus_summary, sections, session_notes })
+      .insert({ session_title, total_time, focus_summary, sections, session_notes, session_type: type })
       .select()
       .single();
 

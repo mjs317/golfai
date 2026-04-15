@@ -217,11 +217,14 @@ export interface RecentRangeSession {
   focus_summary: string;
   session_notes?: string | null;
   completed_at: string;
+  session_type: 'practice' | 'warmup';
   sections: RangePlanSection[];
 }
 
 export async function generateRangePlan(
   sessionMinutes: number,
+  sessionType: 'practice' | 'warmup',
+  facilityOptions: { chippingGreen: boolean; puttingGreen: boolean },
   recentRounds: Array<{
     date: string; gross_score: number; par: number;
     fairways_hit: number; fairways_attempted: number;
@@ -251,12 +254,25 @@ export async function generateRangePlan(
     new Map(recentRounds.flatMap(r => r.ai_drills || []).map(d => [d.title, d])).values()
   ).slice(0, 5);
 
+  const facilityParts = ['a driving range with all clubs'];
+  if (facilityOptions.chippingGreen) facilityParts.push('a chipping green');
+  if (facilityOptions.puttingGreen) facilityParts.push('a practice putting green');
+  const facilityString = facilityParts.join(', ');
+
+  const isWarmup = sessionType === 'warmup';
+  const sessionTypeLabel = isWarmup ? 'pre-round warm-up' : 'driving range practice session';
+  const sessionTypePurpose = isWarmup
+    ? `This is a PRE-ROUND WARM-UP, not a full practice session. The goal is to loosen up, find a rhythm, and build confidence before the round. Structure the session to: start with a brief dynamic warm-up, hit a few wedges and short irons for feel, work up through mid-irons and fairway woods, finish with the driver. Only include a short putting/chipping section at the end if the available facilities allow and time permits. Do NOT focus on fixing swing faults — keep it positive, rhythm-based, and confidence-building.`
+    : `This is a full PRACTICE SESSION focused on improvement. Build on previous sessions — introduce new variations if a drill was already done recently, and directly address any weaknesses Michael noted in his session notes. Prioritize the weakest areas from recent stats.`;
+
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 3000,
     messages: [{
       role: "user",
-      content: `You are an expert PGA-level golf coach creating a ${sessionMinutes}-minute driving range practice session for Michael, a 14-handicap golfer aiming for single digits. He has access to a driving range with all clubs and a practice putting green.
+      content: `You are an expert PGA-level golf coach creating a ${sessionMinutes}-minute ${sessionTypeLabel} for Michael, a 14-handicap golfer aiming for single digits. He has access to ${facilityString}.
+
+${sessionTypePurpose}
 
 CURRENT STATS (last ${recentRounds.length} rounds):
 - Fairway %: ${avgFw}% (target: 50%+)
@@ -269,7 +285,7 @@ ${recentRangeSessions.length > 0 ? `RECENT RANGE SESSIONS (most recent first —
 ${recentRangeSessions.slice(0, 3).map((s, i) => {
   const date = new Date(s.completed_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
   const drillNames = s.sections.flatMap(sec => sec.items.map(item => item.text)).slice(0, 6).join(", ");
-  return `Session ${i + 1} (${date}, ${s.total_time}): "${s.session_title}"
+  return `Session ${i + 1} (${date}, ${s.total_time}, ${s.session_type === 'warmup' ? 'Pre-Round Warm-Up' : 'Practice'}): "${s.session_title}"
   Focus: ${s.focus_summary}
   Drills practiced: ${drillNames}${s.session_notes ? `\n  Michael's notes: "${s.session_notes}"` : ""}`;
 }).join("\n\n")}` : "No previous range sessions yet — this is the first one."}
@@ -277,7 +293,7 @@ ${recentRangeSessions.slice(0, 3).map((s, i) => {
 ${recentDrills.length > 0 ? `PREVIOUSLY RECOMMENDED DRILLS (from round analysis):
 ${recentDrills.map(d => `- ${d.title}: ${d.description}`).join("\n")}` : ""}
 
-Create a complete ${sessionMinutes}-minute range session. Build on previous sessions — introduce new variations if a drill was already done recently, and directly address any weaknesses Michael noted in his session notes. Prioritize the weakest areas. Return ONLY valid JSON with this exact structure:
+Return ONLY valid JSON with this exact structure:
 {
   "session_title": "descriptive title for this session (e.g. 'Accuracy & Iron Control Session')",
   "total_time": "${sessionMinutes} minutes",
@@ -307,14 +323,12 @@ Create a complete ${sessionMinutes}-minute range session. Build on previous sess
 }
 
 Rules:
-- Warm-up should be 5-10 min (proportional to session length)
-- 2-4 main sections based on top weaknesses
-- End with a putting/short game section if time allows
-- Each section has 2-4 specific items with actionable text
+- Warm-up should be proportional to session length (2-3 min for 10-min warm-up, 5-10 min for longer sessions)
 - Colors: gray=warmup, blue=driving/woods, green=irons/approaches, orange=short game/chipping, purple=putting
-- All items must be doable at a standard driving range or putting green
+- Each section has 2-4 specific items with actionable text
 - Be very specific (e.g. "20 balls with 7-iron, aim at 150yd flag" not "practice irons")
-- Time allocations must add up to exactly ${sessionMinutes} minutes`,
+- Time allocations must add up to exactly ${sessionMinutes} minutes
+- Do NOT include drills that require areas not listed in the available facilities (${facilityString})`,
     }],
   });
 
