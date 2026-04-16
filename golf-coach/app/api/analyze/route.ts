@@ -2,6 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateCoachingAnalysis, parseScreenshots } from "@/lib/claude";
 import { supabase } from "@/lib/supabase";
 
+function normalizeDate(dateStr: string): string {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+  const parsed = new Date(dateStr);
+  if (!isNaN(parsed.getTime())) {
+    const y = parsed.getFullYear();
+    const m = String(parsed.getMonth() + 1).padStart(2, "0");
+    const d = String(parsed.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+  return new Date().toISOString().split("T")[0];
+}
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -45,7 +57,7 @@ export async function POST(request: NextRequest) {
     const { data: savedRound, error } = await supabase
       .from("rounds")
       .insert({
-        date: parsedRound.date,
+        date: normalizeDate(parsedRound.date),
         course_name: parsedRound.course_name,
         holes_played: parsedRound.holes_played,
         gross_score: parsedRound.gross_score,
