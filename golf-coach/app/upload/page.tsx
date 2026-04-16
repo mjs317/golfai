@@ -31,6 +31,29 @@ export default function UploadPage() {
     setFiles(prev => [...prev, ...imageFiles].slice(0, 6));
   };
 
+  const compressImage = (file: File): Promise<File> =>
+    new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const maxWidth = 1500;
+        let { width, height } = img;
+        if (width > maxWidth) { height = Math.round((height * maxWidth) / width); width = maxWidth; }
+        const canvas = document.createElement("canvas");
+        canvas.width = width; canvas.height = height;
+        canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => resolve(blob
+            ? new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" })
+            : file),
+          "image/jpeg", 0.85
+        );
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
+    });
+
   const removeFile = (index: number) => setFiles(prev => prev.filter((_, i) => i !== index));
 
   const handleDrop = (e: React.DragEvent) => {
@@ -53,16 +76,21 @@ export default function UploadPage() {
     }, 3000);
 
     try {
+      const compressed = await Promise.all(files.map(compressImage));
       const formData = new FormData();
-      files.forEach(f => formData.append("screenshots", f));
+      compressed.forEach(f => formData.append("screenshots", f));
       if (notes) formData.append("notes", notes);
 
       const response = await fetch("/api/analyze", { method: "POST", body: formData });
       clearInterval(interval);
 
       if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || "Analysis failed");
+        const text = await response.text();
+        let message = "Analysis failed";
+        try { message = JSON.parse(text).error || message; } catch {
+          if (response.status === 413) message = "Screenshots are too large. Please try uploading fewer images.";
+        }
+        throw new Error(message);
       }
 
       const data = await response.json();
