@@ -2,9 +2,12 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, X, CheckCircle, AlertCircle, ChevronRight, Loader2, ImagePlus } from "lucide-react";
+import Link from "next/link";
+import { Upload, X, CheckCircle, AlertCircle, ChevronRight, Loader2, ImagePlus, Eye } from "lucide-react";
 import clsx from "clsx";
 import { CoachingAnalysis, ParsedRoundData } from "@/lib/types";
+
+const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
 type UploadStep = "upload" | "processing" | "results";
 
@@ -195,6 +198,22 @@ export default function UploadPage() {
         <div className="flex gap-3">
           <button onClick={() => { setFiles([]); setNotes(""); setResult(null); setStep("upload"); }} className="btn-secondary flex-1">Upload Another</button>
           <button onClick={() => router.push("/")} className="btn-primary flex-1 flex items-center justify-center gap-2">View Dashboard <ChevronRight size={16} /></button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isDemoMode) {
+    return (
+      <div className="max-w-xl mx-auto space-y-5">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Upload Round</h1>
+        </div>
+        <div className="card flex flex-col items-center text-center gap-3 py-10">
+          <Eye size={36} className="text-amber-500" />
+          <p className="font-semibold text-gray-800 dark:text-gray-100">View Only Demo</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Uploading rounds is disabled in the demo. Browse the dashboard and history to see how the app works.</p>
+          <Link href="/" className="btn-primary text-sm mt-2">Go to Dashboard</Link>
         </div>
       </div>
     );

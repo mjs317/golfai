@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, CheckCircle2, Circle, RefreshCw, Dumbbell, ChevronDown, ChevronUp, Save, Check, Trash2 } from "lucide-react";
+import { Loader2, CheckCircle2, Circle, RefreshCw, Dumbbell, ChevronDown, ChevronUp, Save, Check, Trash2, Eye } from "lucide-react";
 import clsx from "clsx";
 import { RangePlan, RangePlanSection } from "@/lib/claude";
+
+const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
 type SessionType = 'practice' | 'warmup';
 type ActiveTab = 'generate' | 'history';
@@ -140,7 +142,7 @@ export default function RangePage() {
   const [saved, setSaved] = useState(false);
 
   // Tabs
-  const [activeTab, setActiveTab] = useState<ActiveTab>('generate');
+  const [activeTab, setActiveTab] = useState<ActiveTab>(isDemoMode ? 'history' : 'generate');
 
   // History state
   const [sessions, setSessions] = useState<HistorySession[]>([]);
@@ -405,16 +407,22 @@ export default function RangePage() {
               </div>
             </div>
 
-            <button
-              onClick={generate}
-              disabled={loading}
-              className="btn-primary w-full flex items-center justify-center gap-2"
-            >
-              {loading
-                ? <><Loader2 size={18} className="animate-spin" />Generating your session...</>
-                : <><Dumbbell size={18} />{plan ? "Generate New Session" : sessionType === 'warmup' ? "Generate Warm-Up Plan" : "Generate Practice Session"}</>
-              }
-            </button>
+            {isDemoMode ? (
+              <div className="flex items-center justify-center gap-2 py-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 text-sm text-amber-700 dark:text-amber-300">
+                <Eye size={16} />View Only — Plan generation is disabled in the demo
+              </div>
+            ) : (
+              <button
+                onClick={generate}
+                disabled={loading}
+                className="btn-primary w-full flex items-center justify-center gap-2"
+              >
+                {loading
+                  ? <><Loader2 size={18} className="animate-spin" />Generating your session...</>
+                  : <><Dumbbell size={18} />{plan ? "Generate New Session" : sessionType === 'warmup' ? "Generate Warm-Up Plan" : "Generate Practice Session"}</>
+                }
+              </button>
+            )}
 
             {error && (
               <div className="mt-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-sm text-red-700 dark:text-red-300">
@@ -511,16 +519,18 @@ export default function RangePage() {
                         className="w-full border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-gray-100 placeholder-gray-400 bg-white dark:bg-gray-800 mb-3"
                         rows={3}
                       />
-                      <button
-                        onClick={saveSession}
-                        disabled={saving}
-                        className="btn-primary w-full flex items-center justify-center gap-2"
-                      >
-                        {saving
-                          ? <><Loader2 size={16} className="animate-spin" />Saving...</>
-                          : <><Save size={16} />Save Session & Notes</>
-                        }
-                      </button>
+                      {!isDemoMode && (
+                        <button
+                          onClick={saveSession}
+                          disabled={saving}
+                          className="btn-primary w-full flex items-center justify-center gap-2"
+                        >
+                          {saving
+                            ? <><Loader2 size={16} className="animate-spin" />Saving...</>
+                            : <><Save size={16} />Save Session & Notes</>
+                          }
+                        </button>
+                      )}
                     </>
                   )}
                 </div>
@@ -582,33 +592,35 @@ export default function RangePage() {
                         <p className="text-xs text-gray-400 dark:text-gray-500 italic mt-1 line-clamp-2">&ldquo;{session.session_notes}&rdquo;</p>
                       )}
                     </div>
-                    <div className="flex-shrink-0">
-                      {confirmDeleteId === session.id ? (
-                        <div className="flex items-center gap-1">
+                    {!isDemoMode && (
+                      <div className="flex-shrink-0">
+                        {confirmDeleteId === session.id ? (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => deleteSession(session.id)}
+                              disabled={deletingId === session.id}
+                              className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20"
+                            >
+                              {deletingId === session.id ? '...' : 'Confirm'}
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteId(null)}
+                              className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 px-2 py-1 rounded"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
                           <button
-                            onClick={() => deleteSession(session.id)}
-                            disabled={deletingId === session.id}
-                            className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20"
+                            onClick={() => setConfirmDeleteId(session.id)}
+                            className="text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors p-1 rounded"
+                            title="Delete session"
                           >
-                            {deletingId === session.id ? '...' : 'Confirm'}
+                            <Trash2 size={15} />
                           </button>
-                          <button
-                            onClick={() => setConfirmDeleteId(null)}
-                            className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 px-2 py-1 rounded"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setConfirmDeleteId(session.id)}
-                          className="text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors p-1 rounded"
-                          title="Delete session"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      )}
-                    </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

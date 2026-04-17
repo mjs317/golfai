@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateRangePlan } from "@/lib/claude";
 import { supabase } from "@/lib/supabase";
+import { isDemoMode } from "@/lib/demo";
 
 export async function POST(request: NextRequest) {
+  if (isDemoMode) return NextResponse.json({ error: "Demo mode — read only" }, { status: 403 });
   try {
     const { sessionMinutes, sessionType, facilityOptions } = await request.json();
     const minutes = Number(sessionMinutes) || 60;

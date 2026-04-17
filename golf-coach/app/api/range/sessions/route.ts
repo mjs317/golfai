@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { isDemoMode } from "@/lib/demo";
 
 export async function GET() {
   try {
@@ -17,6 +18,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  if (isDemoMode) return NextResponse.json({ error: "Demo mode — read only" }, { status: 403 });
   try {
     const body = await request.json();
     const { session_title, total_time, focus_summary, sections, session_notes, session_type } = body;

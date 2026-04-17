@@ -6,13 +6,17 @@ import { LayoutDashboard, Upload, History, Target, Dumbbell, Sun, Moon, Monitor 
 import clsx from "clsx";
 import { useTheme } from "./ThemeProvider";
 
-const navItems = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/upload", label: "New Round", icon: Upload },
-  { href: "/history", label: "History", icon: History },
-  { href: "/coach", label: "Coach", icon: Target },
-  { href: "/range", label: "Range", icon: Dumbbell },
+const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+
+const allNavItems = [
+  { href: "/", label: "Dashboard", icon: LayoutDashboard, demoHidden: false },
+  { href: "/upload", label: "New Round", icon: Upload, demoHidden: true },
+  { href: "/history", label: "History", icon: History, demoHidden: false },
+  { href: "/coach", label: "Coach", icon: Target, demoHidden: false },
+  { href: "/range", label: "Range", icon: Dumbbell, demoHidden: false },
 ];
+
+const navItems = allNavItems.filter(item => !(isDemoMode && item.demoHidden));
 
 function ThemeToggle() {
   const { theme, setTheme } = useTheme();

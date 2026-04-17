@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { isDemoMode } from "@/lib/demo";
 
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  if (isDemoMode) return NextResponse.json({ error: "Demo mode — read only" }, { status: 403 });
   try {
     const { id } = params;
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });

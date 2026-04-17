@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateCoachingAnalysis, parseScreenshots } from "@/lib/claude";
 import { supabase } from "@/lib/supabase";
+import { isDemoMode } from "@/lib/demo";
 
 function normalizeDate(dateStr: string): string {
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
@@ -15,6 +16,7 @@ function normalizeDate(dateStr: string): string {
 }
 
 export async function POST(request: NextRequest) {
+  if (isDemoMode) return NextResponse.json({ error: "Demo mode — read only" }, { status: 403 });
   try {
     const formData = await request.formData();
     const files = formData.getAll("screenshots") as File[];

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navigation from "@/components/Navigation";
+import DemoBanner from "@/components/DemoBanner";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
@@ -24,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans">
         <ThemeProvider>
           <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+            <DemoBanner />
             <Navigation />
             <main className="max-w-5xl mx-auto px-4 py-6 pb-24 md:pb-8">
               {children}
