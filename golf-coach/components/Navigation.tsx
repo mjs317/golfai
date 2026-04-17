@@ -5,8 +5,7 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, Upload, History, Target, Dumbbell, Sun, Moon, Monitor } from "lucide-react";
 import clsx from "clsx";
 import { useTheme } from "./ThemeProvider";
-
-const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+import { useDemoMode } from "./DemoProvider";
 
 const allNavItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, demoHidden: false },
@@ -15,8 +14,6 @@ const allNavItems = [
   { href: "/coach", label: "Coach", icon: Target, demoHidden: false },
   { href: "/range", label: "Range", icon: Dumbbell, demoHidden: false },
 ];
-
-const navItems = allNavItems.filter(item => !(isDemoMode && item.demoHidden));
 
 function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -39,6 +36,8 @@ function ThemeToggle() {
 
 export default function Navigation() {
   const pathname = usePathname();
+  const isDemoMode = useDemoMode();
+  const navItems = allNavItems.filter(item => !(isDemoMode && item.demoHidden));
   return (
     <>
       <header className="hidden md:block bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">

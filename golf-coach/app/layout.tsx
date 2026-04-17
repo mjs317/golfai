@@ -3,6 +3,8 @@ import "./globals.css";
 import Navigation from "@/components/Navigation";
 import DemoBanner from "@/components/DemoBanner";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { DemoProvider } from "@/components/DemoProvider";
+import { isDemoModeServer } from "@/lib/demo";
 
 export const metadata: Metadata = {
   title: "AI Golf Coach",
@@ -10,6 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const demoMode = isDemoModeServer();
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -24,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="font-sans">
         <ThemeProvider>
+          <DemoProvider isDemoMode={demoMode}>
           <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
             <DemoBanner />
             <Navigation />
@@ -31,6 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {children}
             </main>
           </div>
+          </DemoProvider>
         </ThemeProvider>
       </body>
     </html>

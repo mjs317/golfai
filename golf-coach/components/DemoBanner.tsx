@@ -1,9 +1,11 @@
 "use client";
 
 import { Eye } from "lucide-react";
+import { useDemoMode } from "./DemoProvider";
 
 export default function DemoBanner() {
-  if (process.env.NEXT_PUBLIC_DEMO_MODE !== 'true') return null;
+  const isDemoMode = useDemoMode();
+  if (!isDemoMode) return null;
   return (
     <div className="bg-amber-50 dark:bg-amber-900/30 border-b border-amber-200 dark:border-amber-700">
       <div className="max-w-5xl mx-auto px-4 py-2 flex items-center gap-2 text-sm text-amber-800 dark:text-amber-300">

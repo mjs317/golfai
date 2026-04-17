@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { Loader2, CheckCircle2, Circle, RefreshCw, Dumbbell, ChevronDown, ChevronUp, Save, Check, Trash2, Eye } from "lucide-react";
 import clsx from "clsx";
 import { RangePlan, RangePlanSection } from "@/lib/claude";
-
-const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+import { useDemoMode } from "@/components/DemoProvider";
 
 type SessionType = 'practice' | 'warmup';
 type ActiveTab = 'generate' | 'history';
@@ -126,6 +125,8 @@ function TypeBadge({ type }: { type: 'practice' | 'warmup' }) {
 }
 
 export default function RangePage() {
+  const isDemoMode = useDemoMode();
+
   // Session generation state
   const [sessionType, setSessionType] = useState<SessionType>('practice');
   const [sessionMinutes, setSessionMinutes] = useState(60);
@@ -141,7 +142,7 @@ export default function RangePage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // Tabs
+  // Tabs — default to history in demo mode so visitors see past sessions
   const [activeTab, setActiveTab] = useState<ActiveTab>(isDemoMode ? 'history' : 'generate');
 
   // History state

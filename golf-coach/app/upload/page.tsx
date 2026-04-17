@@ -6,8 +6,7 @@ import Link from "next/link";
 import { Upload, X, CheckCircle, AlertCircle, ChevronRight, Loader2, ImagePlus, Eye } from "lucide-react";
 import clsx from "clsx";
 import { CoachingAnalysis, ParsedRoundData } from "@/lib/types";
-
-const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+import { useDemoMode } from "@/components/DemoProvider";
 
 type UploadStep = "upload" | "processing" | "results";
 
@@ -18,6 +17,7 @@ interface AnalysisResult {
 }
 
 export default function UploadPage() {
+  const isDemoMode = useDemoMode();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<UploadStep>("upload");
